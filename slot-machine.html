@@ -1,9 +1,9 @@
 <!--
  * @Date: 2021-07-19 16:08:06
  * @Author: chenwb
- * @LastEditTime: 2021-07-22 10:49:59
+ * @LastEditTime: 2021-07-22 16:28:17
  * @LastEditors: chenwb
- * @FilePath: \undefinedc:\Users\admin\Desktop\slot-machine.html
+ * @FilePath: \slot-machine\slot-machine.html
  * @Descripttion: 
 -->
 <!DOCTYPE html>
@@ -18,11 +18,11 @@
     div#main {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-around;
+      justify-content: center;
       padding-bottom: 20px;
       margin: 0 auto;
 
-      width: 250px;
+      width: 300px;
       border: red 3px solid;
       background-color: #282c34;
     }
@@ -44,12 +44,18 @@
       border: none;
       cursor: pointer;
       font-size: 20px;
-      color: #fff;
-      background-color: red;
     }
     div#bottom > button:disabled {
       cursor: not-allowed;
       background-color: #555;
+    }
+    button#start-btn {
+      color: #fff;
+      background-color: red;
+    }
+    button#recharge-btn {
+      color: #fff;
+      background-color: #64b0ed;
     }
     /* 单个显示屏 */
     div.ceil {
@@ -58,6 +64,7 @@
       /* 宽高 */
       width: 60px;
       height: 100px;
+      margin: 0 10px;
       border: red 2px solid;
     }
     /* 指针 */
@@ -68,7 +75,7 @@
       right: 0;
       top: 45px;
       z-index: 5;
-
+      /* 三角形 */
       border-width: 5px 10px;
       border-color: transparent;
       border-style: solid;
@@ -142,8 +149,7 @@
         transform: translateY(0px);
       }
     }
-
-    /* 历史记录 */
+    /* 计分板 */
     table{
       width: 250px;
       margin: 0 auto;
@@ -160,15 +166,16 @@
       text-align: center;
     }
     td:last-child {
-      color: #075530
+      background-color: #075530;
+      color: #fbe032;
     }
   </style>
 </head>
 <body>
   <div id="main">
     <div id="top">
-      <h2>🎰 Slot Machine</h2>
-      <p id="balance">💵 10</p>
+      <h2 id="top-title">🎰 Slot Machine</h2>
+      <p id="balance"></p>
     </div>
     <div id="ceil1" class="ceil">
       <ul class="nums"></ul>
@@ -184,6 +191,7 @@
     </div>
     <div id="bottom">
       <button id="start-btn" onclick="begin()">Begin</button>
+      <!-- <button id="recharge-btn" onclick="recharge()">Recharge</button> -->
     </div>
   </div>
   <div id="history">
@@ -197,22 +205,7 @@
           <th>$</th>
         </tr>
       </thead>
-      <tbody id="history-content">
-        <tr>
-          <td>EX</td>
-          <td>🍓</td>
-          <td>🍓</td>
-          <td>🍎</td>
-          <td>+8</td>
-        </tr>
-        <tr>
-          <td>EX</td>
-          <td>🍓</td>
-          <td>🍓</td>
-          <td>🍓</td>
-          <td>+40</td>
-        </tr>
-      </tbody>
+      <tbody id="history-content"></tbody>
     </table>
   </div>
   <svg>
@@ -227,19 +220,17 @@
     const ulArray   = document.getElementsByClassName('nums')
     // 游戏相关常量数值
     const BEGIN = 10    // 初始币数
+    const TARGET = 100  // 目标币数
     const PRICE = 2     // 单次投币
-    const AWARD_L1 = 8  // 两连获币
-    const AWARD_L2 = 40 // 三连获币
+    const AWARD_L1 = 50 // 三连获币
+    const AWARD_L2 = 5  // 两连获币
     // 游戏相关变量数值
     let count = 0
     let balance = BEGIN
     let rolling = false
     let currents = []
-    let history = []
     // 单个元素高度与显示屏高度
     let heightLi, heightCeil 
-
-    init() 
 
     function init() {
       initCeil()
@@ -252,7 +243,7 @@
     }
     // 插入li元素，初始化滚动带
     function initCeil() {
-      let _list = list
+      let _list = list.slice()
       // 前后增加占位图案
       _list.push(_list[0])
       _list.unshift(_list[listLength-1])
@@ -272,61 +263,57 @@
       let _column1 = document.createElement('tr')
       let _column2 = document.createElement('tr')
       _column1.innerHTML = `
-        <td>EX</td>
+        <td>🥇</td>
+        <td>${list[0]}</td>
+        <td>${list[0]}</td>
+        <td>${list[0]}</td>
+        <td>+${AWARD_L1}</td>
+      `
+      _column2.innerHTML = `
+        <td>🥈</td>
         <td>${list[0]}</td>
         <td>${list[0]}</td>
         <td>${list[1]}</td>
-        <td>${AWARD_L1}</td>
-      `
-      _column1.innerHTML = `
-        <td>EX</td>
-        <td>${list[0]}</td>
-        <td>${list[0]}</td>
-        <td>${list[0]}</td>
-        <td>${AWARD_L2}</td>
+        <td>+${AWARD_L2}</td>
       `
       _tbody.appendChild(_column1)
       _tbody.appendChild(_column2)
     }
     // 设置Y轴偏移量，范围[1, listLength]
     function setTop(element, offset) {
-      element.style.top = `${offset*(-heightLi)+(heightCeil-heightLi)/2}px`
+      element.style.top = `${(offset+1)*(-heightLi)+(heightCeil-heightLi)/2}px`
     }
     // 滚动第index个单位
     function roll(index) {
-      currents[index] = currents[index] < (listLength-1) ? currents[index]+1:1
+      currents[index] = currents[index]+1 < listLength ? currents[index]+1:1
       setTop(ulArray[index], currents[index])
     }
     // 停止滚动第index个单位，停留在第num个
     function stop(index, num) {
       currents[index] = num
       setTop(ulArray[index], currents[index])
-      // 清除类名
+      // 清除动画
       setTimeout(() => {
         ceilArray[index].className = ceilArray[index].className.replace(' active','')
       }, 0)
+      // 停止后操作
       if(index>=2) {
         count += 1
-        history.push(currents)
         // 计算得分、添加记录
         let award = getAward(currents)
-        calcBanlance(award)
+        changeBalance(award)
         addRecord(currents, award)
         changeBtnState(false)
         rolling = false
-        // 余额不足
-        if(balance<PRICE) {
-          changeBtnState(true)
-        }
       }
     }
     // 计算余额
-    function calcBanlance(award) {
+    function changeBalance(award=10) {
       let _balanceElement = document.getElementById('balance')
       balance = balance + award
       _balanceElement.innerText = `💵 ${balance}`
     }
-    // 更改开始状态
+    // 更改按钮状态
     function changeBtnState(state=false) {
       document.getElementById('start-btn').disabled = state
     }
@@ -345,7 +332,7 @@
     }
     // 获取单次得分
     function getAward(arr) {
-      let awardLevel = arr.length - Array.from(new Set(arr)).length
+      let awardLevel = Array.from(new Set(arr)).length
       let awardSum
       switch(awardLevel) {
         case 1:
@@ -355,13 +342,13 @@
           awardSum = AWARD_L2
           break
         default:
-          awardSum = -PRICE
+          awardSum = 0
       }
       return awardSum
     }
-    // 随机获取[1, listLength]整数
+    // 随机获取[0, listLength-1]整数
     function getRandom() {
-      return Math.floor(Math.random()*listLength)+1
+      return Math.floor(Math.random()*listLength)
     }
     // 第index个单位开启动画
     function addAnima(index) {
@@ -369,17 +356,30 @@
         ceilArray[index].className += ' active'
       }, 0)
     }
+    // 游戏结束
+    function ifOver() {
+      if( balance<PRICE ) {
+        document.getElementById('top-title').innerText = '🥀 GAME OVER'
+        changeBtnState(true)
+        return true
+      } else if( balance>=TARGET ) {
+        document.getElementById('top-title').innerText = '👑 YOU WIN!'
+        changeBtnState(true)
+        return true
+      }
+      return false
+    }
     // 开始
     function begin() {
-      if(rolling) return
-      changeBtnState(true)
+      if(ifOver()) return
       rolling = true
+      changeBtnState(true)
+      changeBalance(-PRICE)
       let timers = []
       for(let i=0;i<3;i++) {
-        // 添加滚动样式
-        addAnima(i)
+        addAnima(i) // 添加滚动样式
         // 开始滚动
-        timers[i] = setInterval(()=>{
+        timers[i] = setInterval(()=>{ 
           roll(i) 
         }, 100)
         // 添加定时器停止
@@ -389,10 +389,17 @@
         }, (i+1)*1100);
       }
     }
-    // // 自动执行
-    // setInterval(()=>{
-    //   begin() 
-    // }, 4000)
+    // 自动运行
+    function auto() {
+      setInterval(begin, 4*1000)
+    }
+    // 充值
+    function recharge() {
+      changeBalance()
+    }
+    
+    init()
+    // auto()
   </script>
 </body>
 </html>

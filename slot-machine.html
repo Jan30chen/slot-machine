@@ -1,0 +1,398 @@
+<!--
+ * @Date: 2021-07-19 16:08:06
+ * @Author: chenwb
+ * @LastEditTime: 2021-07-22 10:49:59
+ * @LastEditors: chenwb
+ * @FilePath: \undefinedc:\Users\admin\Desktop\slot-machine.html
+ * @Descripttion: 
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slot Machine</title>
+  <style>
+    /* 机体 */
+    div#main {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding-bottom: 20px;
+      margin: 0 auto;
+
+      width: 250px;
+      border: red 3px solid;
+      background-color: #282c34;
+    }
+    /* 标题 */
+    div#top {
+      width: 100%;
+      color: #fff;
+      text-align: center;
+    }
+    /* 底部 */
+    div#bottom {
+      width: 100%;
+      margin-top: 25px;
+      text-align: center;
+    }
+    div#bottom > button {
+      width: 100px;
+      height: 30px;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: #fff;
+      background-color: red;
+    }
+    div#bottom > button:disabled {
+      cursor: not-allowed;
+      background-color: #555;
+    }
+    /* 单个显示屏 */
+    div.ceil {
+      position: relative;
+      overflow: hidden;
+      /* 宽高 */
+      width: 60px;
+      height: 100px;
+      border: red 2px solid;
+    }
+    /* 指针 */
+    div.triangle { 
+      position: absolute;
+      width: 0;
+      height: 0;
+      right: 0;
+      top: 45px;
+      z-index: 5;
+
+      border-width: 5px 10px;
+      border-color: transparent;
+      border-style: solid;
+      border-right-color: red;
+    }
+    /* 显示屏后的滚动带 */
+    ul.nums {
+      width: 100%;
+      position: relative;
+      top: -25px;
+      /* 清除自带样式 */
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      /* 过渡时间 */
+      transition: top 0.1s;
+    } 
+    /* 构成滚动带的小元素 */
+    ul.nums>li {
+      top: 0px;
+      height: 50px;
+      text-align: center;
+      /* 字体 */
+      font-size: 30px;
+      line-height: 50px;
+      color: #fff;
+      background-color: #fbe032;
+    }
+    /* 转动中样式：晃动、Y轴模糊 */
+    div#ceil1.active {
+      animation: shake2 0.5s linear, shake2 0.5s linear 1s;
+    }
+    div#ceil2.active {
+      animation: shake2 0.5s linear, shake2 0.5s linear 2s;
+    }
+    div#ceil3.active {
+      animation: shake2 0.5s linear, shake2 0.5s linear 3s;
+    }
+    div#ceil1.active > ul.nums {
+      animation: shake 1s linear 2 1s alternate;
+      filter: url(#blur);
+    }
+    div#ceil2.active > ul.nums {
+      animation: shake 1s linear 2 2s alternate;
+      filter: url(#blur);
+    }
+    div#ceil3.active > ul.nums {
+      animation: shake 1s linear 2 3s alternate;
+      filter: url(#blur);
+    }
+    /* 动画-晃动效果 */
+    @keyframes shake {
+      from {
+        transform: translateY(0px) 
+      }
+      to {
+        transform: translateY(-10px);
+      }
+    }
+    @keyframes shake2 {
+      0% {
+        transform: translateY(0px);
+      }
+      25% {
+        transform: translateY(-6px) 
+      }
+      50% {
+        transform: translateY(6px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    /* 历史记录 */
+    table{
+      width: 250px;
+      margin: 0 auto;
+      margin-top: 50px;
+    }
+    table, td {
+      border: 1px solid #333;
+    }
+    thead, tfoot {
+      background-color: #333;
+      color: #fff;
+    }
+    td {
+      text-align: center;
+    }
+    td:last-child {
+      color: #075530
+    }
+  </style>
+</head>
+<body>
+  <div id="main">
+    <div id="top">
+      <h2>🎰 Slot Machine</h2>
+      <p id="balance">💵 10</p>
+    </div>
+    <div id="ceil1" class="ceil">
+      <ul class="nums"></ul>
+      <div class="triangle"></div>
+    </div>
+    <div id="ceil2" class="ceil">
+      <ul class="nums"></ul>
+      <div class="triangle"></div>
+    </div>
+    <div id="ceil3" class="ceil">
+      <ul class="nums"></ul>
+      <div class="triangle"></div>
+    </div>
+    <div id="bottom">
+      <button id="start-btn" onclick="begin()">Begin</button>
+    </div>
+  </div>
+  <div id="history">
+    <table>
+      <thead>
+        <tr>
+          <th>count</th>
+          <th>Ⅰ</th>
+          <th>Ⅱ</th>
+          <th>Ⅲ</th>
+          <th>$</th>
+        </tr>
+      </thead>
+      <tbody id="history-content">
+        <tr>
+          <td>EX</td>
+          <td>🍓</td>
+          <td>🍓</td>
+          <td>🍎</td>
+          <td>+8</td>
+        </tr>
+        <tr>
+          <td>EX</td>
+          <td>🍓</td>
+          <td>🍓</td>
+          <td>🍓</td>
+          <td>+40</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <svg>
+    <filter id="blur">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0 10"/>
+    </filter>
+  </svg>
+  <script>
+    const list = ['🍓', '🍎', '🥭', '🍍', '🍌', '🍋', '🍊', '🍉', '🍈', '🍇']
+    const listLength = list.length
+    const ceilArray = document.getElementsByClassName('ceil')
+    const ulArray   = document.getElementsByClassName('nums')
+    // 游戏相关常量数值
+    const BEGIN = 10    // 初始币数
+    const PRICE = 2     // 单次投币
+    const AWARD_L1 = 8  // 两连获币
+    const AWARD_L2 = 40 // 三连获币
+    // 游戏相关变量数值
+    let count = 0
+    let balance = BEGIN
+    let rolling = false
+    let currents = []
+    let history = []
+    // 单个元素高度与显示屏高度
+    let heightLi, heightCeil 
+
+    init() 
+
+    function init() {
+      initCeil()
+      initTable()
+      // 设置余额
+      document.getElementById('balance').innerText = `💵 ${balance}`
+      // 设置高度
+      heightCeil = ceilArray[0].clientHeight
+      heightLi = ulArray[0].getElementsByTagName('li')[0].clientHeight
+    }
+    // 插入li元素，初始化滚动带
+    function initCeil() {
+      let _list = list
+      // 前后增加占位图案
+      _list.push(_list[0])
+      _list.unshift(_list[listLength-1])
+      // 遍历插入
+      for(let i=0;i<3;i++) {
+        _list.forEach(item => {
+          let _li = document.createElement('li')
+          _li.innerText = item
+          ulArray[i].appendChild(_li)
+        })
+      }
+    }
+    // 初始化计分板
+    function initTable() {
+      // 插入示例
+      let _tbody  = document.getElementById('history-content')
+      let _column1 = document.createElement('tr')
+      let _column2 = document.createElement('tr')
+      _column1.innerHTML = `
+        <td>EX</td>
+        <td>${list[0]}</td>
+        <td>${list[0]}</td>
+        <td>${list[1]}</td>
+        <td>${AWARD_L1}</td>
+      `
+      _column1.innerHTML = `
+        <td>EX</td>
+        <td>${list[0]}</td>
+        <td>${list[0]}</td>
+        <td>${list[0]}</td>
+        <td>${AWARD_L2}</td>
+      `
+      _tbody.appendChild(_column1)
+      _tbody.appendChild(_column2)
+    }
+    // 设置Y轴偏移量，范围[1, listLength]
+    function setTop(element, offset) {
+      element.style.top = `${offset*(-heightLi)+(heightCeil-heightLi)/2}px`
+    }
+    // 滚动第index个单位
+    function roll(index) {
+      currents[index] = currents[index] < (listLength-1) ? currents[index]+1:1
+      setTop(ulArray[index], currents[index])
+    }
+    // 停止滚动第index个单位，停留在第num个
+    function stop(index, num) {
+      currents[index] = num
+      setTop(ulArray[index], currents[index])
+      // 清除类名
+      setTimeout(() => {
+        ceilArray[index].className = ceilArray[index].className.replace(' active','')
+      }, 0)
+      if(index>=2) {
+        count += 1
+        history.push(currents)
+        // 计算得分、添加记录
+        let award = getAward(currents)
+        calcBanlance(award)
+        addRecord(currents, award)
+        changeBtnState(false)
+        rolling = false
+        // 余额不足
+        if(balance<PRICE) {
+          changeBtnState(true)
+        }
+      }
+    }
+    // 计算余额
+    function calcBanlance(award) {
+      let _balanceElement = document.getElementById('balance')
+      balance = balance + award
+      _balanceElement.innerText = `💵 ${balance}`
+    }
+    // 更改开始状态
+    function changeBtnState(state=false) {
+      document.getElementById('start-btn').disabled = state
+    }
+    // 添加记录
+    function addRecord(arr, award) {
+      let _tbody  = document.getElementById('history-content')
+      let _column = document.createElement('tr')
+      _column.innerHTML = `
+        <td>${count}</td>
+        <td>${list[arr[0]]}</td>
+        <td>${list[arr[1]]}</td>
+        <td>${list[arr[2]]}</td>
+        <td>${award>0?`+${award}`:award}</td>
+      `
+      _tbody.appendChild(_column)
+    }
+    // 获取单次得分
+    function getAward(arr) {
+      let awardLevel = arr.length - Array.from(new Set(arr)).length
+      let awardSum
+      switch(awardLevel) {
+        case 1:
+          awardSum = AWARD_L1
+          break
+        case 2:
+          awardSum = AWARD_L2
+          break
+        default:
+          awardSum = -PRICE
+      }
+      return awardSum
+    }
+    // 随机获取[1, listLength]整数
+    function getRandom() {
+      return Math.floor(Math.random()*listLength)+1
+    }
+    // 第index个单位开启动画
+    function addAnima(index) {
+      setTimeout(() => {
+        ceilArray[index].className += ' active'
+      }, 0)
+    }
+    // 开始
+    function begin() {
+      if(rolling) return
+      changeBtnState(true)
+      rolling = true
+      let timers = []
+      for(let i=0;i<3;i++) {
+        // 添加滚动样式
+        addAnima(i)
+        // 开始滚动
+        timers[i] = setInterval(()=>{
+          roll(i) 
+        }, 100)
+        // 添加定时器停止
+        setTimeout(() => {
+          stop(i, getRandom())
+          clearInterval(timers[i])
+        }, (i+1)*1100);
+      }
+    }
+    // // 自动执行
+    // setInterval(()=>{
+    //   begin() 
+    // }, 4000)
+  </script>
+</body>
+</html>

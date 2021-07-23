@@ -1,10 +1,10 @@
 <!--
  * @Date: 2021-07-19 16:08:06
  * @Author: chenwb
- * @LastEditTime: 2021-07-22 16:28:17
+ * @LastEditTime: 2021-07-23 15:17:27
  * @LastEditors: chenwb
  * @FilePath: \slot-machine\slot-machine.html
- * @Descripttion: 
+ * @Descripttion: Html+CSS+Js 实现老虎机游戏
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -215,6 +215,18 @@
   </svg>
   <script>
     const list = ['🍓', '🍎', '🥭', '🍍', '🍌', '🍋', '🍊', '🍉', '🍈', '🍇']
+    // const list = [
+    //   '🍓', '🍓', '🍓', '🍓', '🍓', '🍓', '🍓', '🍓',
+    //   '🍎', '🍎', '🍎', '🍎', '🍎', '🍎', 
+    //   '🥭', '🥭', '🥭', '🥭', 
+    //   '🍍', '🍍', 
+    //   '🍌',
+    //   '🍇'
+    //   '🍈', '🍈', 
+    //   '🍉', '🍉', '🍉', '🍉', 
+    //   '🍊', '🍊', '🍊', '🍊', '🍊', '🍊', 
+    //   '🍋', '🍋', '🍋', '🍋', '🍋', '🍋', '🍋', '🍋', 
+    // ]
     const listLength = list.length
     const ceilArray = document.getElementsByClassName('ceil')
     const ulArray   = document.getElementsByClassName('nums')
@@ -229,12 +241,14 @@
     let balance = BEGIN
     let rolling = false
     let currents = []
+    let over = false
     // 单个元素高度与显示屏高度
     let heightLi, heightCeil 
 
     function init() {
       initCeil()
       initTable()
+      initKey()
       // 设置余额
       document.getElementById('balance').innerText = `💵 ${balance}`
       // 设置高度
@@ -279,6 +293,14 @@
       _tbody.appendChild(_column1)
       _tbody.appendChild(_column2)
     }
+    // 初始化键盘监听
+    function initKey() {
+      document.onkeydown = function(e) {
+        if( e.key == 'c' && !over ) {
+          recharge()
+        }
+      }
+    }
     // 设置Y轴偏移量，范围[1, listLength]
     function setTop(element, offset) {
       element.style.top = `${(offset+1)*(-heightLi)+(heightCeil-heightLi)/2}px`
@@ -305,6 +327,7 @@
         addRecord(currents, award)
         changeBtnState(false)
         rolling = false
+        over = ifOver()
       }
     }
     // 计算余额
@@ -371,7 +394,7 @@
     }
     // 开始
     function begin() {
-      if(ifOver()) return
+      if(over || rolling) return
       rolling = true
       changeBtnState(true)
       changeBalance(-PRICE)
@@ -397,7 +420,15 @@
     function recharge() {
       changeBalance()
     }
+    // 打乱
+    function foulUp(arr) {
+      for (let i=1; i<arr.length; i++) {
+        const random = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[random]] = [arr[random], arr[i]];
+      }
+    }
     
+    // foulUp(list)
     init()
     // auto()
   </script>
